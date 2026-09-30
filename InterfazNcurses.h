@@ -17,20 +17,27 @@
 // Sangría común de la tabla
 #define INDENT "  "
 
+// Ancho de la columna Status ("ERROR operando invalido" mide 23 caracteres)
+#define ANCHO_STATUS 26
+
 // Tiempos de la animación (milisegundos)
 #define MS_BLANCO   150   // tiempo que la línea permanece borrada
 #define MS_VISIBLE  700   // tiempo que la línea permanece visible
+
+// ID del proceso: aumenta 1 por cada archivo ejecutado (persiste entre ejecuciones)
+static int contador_procesos = 0;
 
 // Imprime la cabecera de la tabla y su línea separadora (quedan fijas en pantalla)
 void imprimir_cabecera_ncurses() {
     move(FILA_CABECERA, 0);
     clrtoeol();
-    mvprintw(FILA_CABECERA, 0, INDENT "%-6s%-6s%-6s%-6s%-6s%-6s%-18s%s",
-             "ID", "PC", "AX", "BX", "CX", "DX", "IR", "Status");
+    mvprintw(FILA_CABECERA, 0, INDENT "%-6s%-6s%-6s%-6s%-6s%-6s%-18s%-*s%s",
+             "ID", "PC", "AX", "BX", "CX", "DX", "IR",
+             ANCHO_STATUS, "Status", "Nombre");
 
     move(FILA_LINEA, 0);
     clrtoeol();
-    mvprintw(FILA_LINEA, 0, INDENT "----------------------------------------------------------------");
+    mvprintw(FILA_LINEA, 0, INDENT "------------------------------------------------------------------------------------------");
     refresh();
 }
 
@@ -51,9 +58,10 @@ void borrar_fila_resultado() {
 }
 
 // Imprime una fila de resultado en el mismo lugar donde estaba la anterior
-void imprimir_fila_resultado(int id, CPU *cpu) {
-    mvprintw(FILA_RESULTADO, 0, INDENT "%-6d%-6d%-6d%-6d%-6d%-6d%-18s%s",
-             id, cpu->pc, cpu->ax, cpu->bx, cpu->cx, cpu->dx, cpu->ir, cpu->status);
+void imprimir_fila_resultado(int id, CPU *cpu, const char *nombre) {
+    mvprintw(FILA_RESULTADO, 0, INDENT "%-6d%-6d%-6d%-6d%-6d%-6d%-18s%-*s%s",
+             id, cpu->pc, cpu->ax, cpu->bx, cpu->cx, cpu->dx, cpu->ir,
+             ANCHO_STATUS, cpu->status, nombre);
     refresh();
     napms(MS_VISIBLE);
 }
@@ -68,7 +76,7 @@ void ejecutar_archivo_ncurses(const char *archivo) {
 
     CPU mi_cpu = {0, 0, 0, 0, 1, "", ""}; // PC inicia en 1
     char linea[100];
-    int id = 1;
+    int id = ++contador_procesos;         // cada archivo ejecutado suma 1
 
     mostrar_mensaje(""); // limpia mensajes previos
     imprimir_cabecera_ncurses();
@@ -83,7 +91,7 @@ void ejecutar_archivo_ncurses(const char *archivo) {
         borrar_fila_resultado();
 
         // 2) Se imprime la nueva línea en ese mismo lugar
-        imprimir_fila_resultado(id, &mi_cpu);
+        imprimir_fila_resultado(id, &mi_cpu, archivo);
 
         mi_cpu.pc++;
     }
