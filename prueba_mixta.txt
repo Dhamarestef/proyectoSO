@@ -1,0 +1,11 @@
+MOV AX, 50
+MOV BX, 3
+ADD AX, BX
+mal comando aqui
+MOV CX, 0
+DIV AX, CX
+SUB BX, 10
+INC BX
+DEC CX
+MUL DX, 4
+MOV DX, AX
